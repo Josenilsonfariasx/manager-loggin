@@ -179,7 +179,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{service_name=~\"$service\"} | level =~ \"(?i)(error|warn)\"",
+          "expr": "{service_name=~\"$service\"} | json | severity =~ \"error|warn\"",
           "legendFormat": "",
           "refId": "A"
         }
