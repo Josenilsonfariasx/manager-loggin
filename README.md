@@ -45,16 +45,12 @@ GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=sua_senha_segura
 GRAFANA_DOMAIN=teste-loggin-monitoring.7djjku.easypanel.host
 LOKI_RETENTION_PERIOD=744h
-EASYPANEL_NETWORK=easypanel-<nome-do-projeto>
+EASYPANEL_NETWORK=easypanel
 ```
 
 > ⚠️ **Troque `GRAFANA_ADMIN_PASSWORD`** — nunca use a senha padrão em produção.
 
-> ℹ️ **`EASYPANEL_NETWORK`**: o EasyPanel usa Docker Swarm com uma rede overlay por projeto no formato `easypanel-<nome-do-projeto>`. Descubra o nome exato com:
-> ```bash
-> docker network ls | grep <nome-do-projeto>
-> # Procure a linha com "overlay" e "swarm"
-> ```
+> ℹ️ **`EASYPANEL_NETWORK`**: o Traefik do EasyPanel fica na rede Docker chamada `easypanel` (global). Use sempre `easypanel` neste campo — a rede `easypanel-<projeto>` é para comunicação interna entre serviços, não para roteamento via Traefik.
 
 ### 1.3 Expor o Grafana
 
