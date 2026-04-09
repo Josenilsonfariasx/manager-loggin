@@ -44,9 +44,16 @@ ENVIRONMENT=production
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=sua_senha_segura
 LOKI_RETENTION_PERIOD=744h
+EASYPANEL_NETWORK=easypanel-<nome-do-projeto>
 ```
 
 > ⚠️ **Troque `GRAFANA_ADMIN_PASSWORD`** — nunca use a senha padrão em produção.
+
+> ℹ️ **`EASYPANEL_NETWORK`**: o EasyPanel usa Docker Swarm com uma rede overlay por projeto no formato `easypanel-<nome-do-projeto>`. Descubra o nome exato com:
+> ```bash
+> docker network ls | grep <nome-do-projeto>
+> # Procure a linha com "overlay" e "swarm"
+> ```
 
 ### 1.3 Expor o Grafana
 
@@ -60,23 +67,15 @@ LOKI_RETENTION_PERIOD=744h
 
 ## 2. Configurar a API para enviar telemetria
 
-### 2.1 Descobrir o hostname interno do OTel Collector
+### 2.1 Hostname do OTel Collector para a API
 
-O EasyPanel usa uma convenção de nomes para a rede interna Docker. Para descobrir o hostname correto:
+Como o `otel-collector` está na rede overlay do projeto (`easypanel-<projeto>`), a API pode alcançá-lo pelo **nome do serviço diretamente**:
 
-1. No EasyPanel, abra o **terminal** do container da sua API (ou use SSH no servidor)
-2. Execute: `getent hosts otel-collector` ou tente fazer `curl` para possíveis hostnames
-3. O padrão costuma ser: `<projeto>_otel-collector-<servico>`
-
-**Dica prática:** Baseado no padrão do seu banco de dados (`planofit_bdd-plano-fit:5432`), o hostname do collector provavelmente será algo como:
-```
-<nome-do-projeto>_otel-collector-monitoring:4318
+```env
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 ```
 
-Teste com:
-```bash
-curl http://<hostname>:4318/
-```
+> Se não resolver, tente o nome completo do container: `http://<projeto>_monitoring-otel-collector-1:4318`
 
 ### 2.2 Instalar os pacotes na API
 
@@ -125,10 +124,24 @@ NODE_OPTIONS=--require ./src/instrumentation.js
 
 | Problema | O que verificar |
 |---|---|
-| Grafana não abre | Porta 3000 exposta no EasyPanel? Domínio configurado? |
-| Nenhum dado no dashboard | Hostname do collector correto? Pacotes OTel instalados? `NODE_OPTIONS` configurado? |
-| Logs não aparecem | `OTEL_SERVICE_NAME` definido? Testar com `curl -X POST http://<collector>:4318/v1/logs` |
-| Métricas não aparecem | Prometheus consegue scrape? Acessar `http://<collector>:8889/metrics` internamente |
+| Grafana retorna 404 | `EASYPANEL_NETWORK` configurado corretamente? Redeploy após mudança? Ver abaixo |
+| Grafana não abre | Porta `3000` configurada no domínio? Campo **Serviço Compose** = `grafana`? |
+| Senha inválida no Grafana | Volume antigo com senha diferente. Reset: `docker exec -it <container-grafana> grafana-cli admin reset-admin-password <nova-senha>` |
+| Nenhum dado no dashboard | `OTEL_EXPORTER_OTLP_ENDPOINT` configurado na API? Ver logs do otel-collector |
+| Logs não chegam ao collector | `docker logs <projeto>_monitoring-otel-collector-1 --tail 30` — deve ver requests `/v1/logs` |
+| Métricas não aparecem | Prometheus faz scrape do collector na porta `8889` |
+
+#### Grafana 404 após redeploy
+
+O Traefik do EasyPanel usa a rede overlay `easypanel-<projeto>`. Se o Grafana não está nessa rede, retorna 404. Fix imediato (sem redeploy):
+
+```bash
+docker network connect easypanel-<projeto> <container-grafana>
+# Exemplo:
+docker network connect easypanel-teste-loggin teste-loggin_monitoring-grafana-1
+```
+
+Depois confirme `EASYPANEL_NETWORK=easypanel-<projeto>` no `.env` do serviço e faça redeploy para fixar permanentemente.
 
 ---
 
