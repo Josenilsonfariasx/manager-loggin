@@ -68,6 +68,9 @@ services:
       - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
+    labels:
+      # Diz ao Traefik qual rede usar para rotear (resolve ambiguidade com múltiplas redes)
+      - "traefik.docker.network=${EASYPANEL_NETWORK:-easypanel-teste-loggin}"
     expose:
       - "3000"   # acesso externo via reverse proxy do EasyPanel
     depends_on:
@@ -75,6 +78,7 @@ services:
       - loki
     networks:
       - monitoring
+      - easypanel
 
 volumes:
   loki_data:
