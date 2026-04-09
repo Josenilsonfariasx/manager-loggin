@@ -75,6 +75,7 @@ services:
       - loki
     networks:
       - monitoring
+      - easypanel
 
 volumes:
   loki_data:
