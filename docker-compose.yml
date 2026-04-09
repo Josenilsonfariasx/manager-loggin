@@ -68,16 +68,8 @@ services:
       - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=${EASYPANEL_NETWORK:-easypanel-teste-loggin}"
-      - "traefik.http.routers.grafana-monitoring.rule=Host(`${GRAFANA_DOMAIN}`)"
-      - "traefik.http.routers.grafana-monitoring.entrypoints=websecure"
-      - "traefik.http.routers.grafana-monitoring.tls=true"
-      - "traefik.http.routers.grafana-monitoring.tls.certresolver=letsencrypt"
-      - "traefik.http.services.grafana-monitoring.loadbalancer.server.port=3000"
     expose:
-      - "3000"   # acesso externo via reverse proxy do EasyPanel
+      - "3000"
     depends_on:
       - prometheus
       - loki
