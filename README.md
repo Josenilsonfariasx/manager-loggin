@@ -133,15 +133,34 @@ NODE_OPTIONS=--require ./src/instrumentation.js
 
 #### Grafana 404 após redeploy
 
-O Traefik do EasyPanel usa a rede overlay `easypanel-<projeto>`. Se o Grafana não está nessa rede, retorna 404. Fix imediato (sem redeploy):
+**Causa raiz:** O Traefik do EasyPanel roteia tráfego apenas para containers que possuem labels Traefik. Essas labels são injetadas automaticamente pelo EasyPanel via `docker-compose.override.yml` quando o domínio está configurado corretamente na UI.
 
+**Diagnóstico rápido:**
 ```bash
-docker network connect easypanel-<projeto> <container-grafana>
-# Exemplo:
-docker network connect easypanel-teste-loggin teste-loggin_monitoring-grafana-1
+# Verificar se o container tem labels Traefik
+docker inspect <container-grafana> --format '{{json .Config.Labels}}'
+# Se não aparecer nada com "traefik." → domínio não está configurado no EasyPanel UI
 ```
 
-Depois confirme `EASYPANEL_NETWORK=easypanel-<projeto>` no `.env` do serviço e faça redeploy para fixar permanentemente.
+**Fix:**
+
+1. No EasyPanel, abra o serviço `monitoring`
+2. Vá em **Domains** e confirme que existe um domínio configurado com:
+   - **Porta:** `3000`
+   - **Serviço Compose:** `grafana`
+3. Se não existir ou estiver errado: delete e recrie o domínio com os valores acima
+4. Salve — o EasyPanel vai fazer redeploy automático injetando os labels corretos
+5. Confirme que `EASYPANEL_NETWORK` está configurado nas variáveis de ambiente do serviço
+
+**Verificar após o redeploy:**
+```bash
+# Deve aparecer chaves "traefik.*" nos labels
+docker inspect <projeto>_monitoring-grafana-1 --format '{{json .Config.Labels}}'
+
+# Verificar redes do container (deve incluir easypanel-<projeto>)
+docker inspect <projeto>_monitoring-grafana-1 \
+  --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{"\n"}}{{end}}'
+```
 
 ---
 
