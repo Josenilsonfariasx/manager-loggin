@@ -7,9 +7,10 @@ services:
       - ./configs/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-production}
-    ports:
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
+    expose:
+      - "4317"   # OTLP gRPC (interno)
+      - "4318"   # OTLP HTTP (interno)
+      - "8889"   # Prometheus metrics endpoint (interno)
     depends_on:
       loki:
         condition: service_healthy
@@ -66,8 +67,8 @@ services:
       - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"   # acesso externo via reverse proxy do EasyPanel
     depends_on:
       - prometheus
       - loki
