@@ -16,6 +16,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
+      - easypanel
 
   loki:
     image: grafana/loki:3.4.2
@@ -83,3 +84,6 @@ volumes:
 networks:
   monitoring:
     driver: bridge
+  easypanel:
+    external: true
+    name: ${EASYPANEL_NETWORK:-teste-loggin_default}
