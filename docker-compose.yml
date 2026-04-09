@@ -69,8 +69,13 @@ services:
       - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     labels:
-      # Diz ao Traefik qual rede usar para rotear (resolve ambiguidade com múltiplas redes)
+      - "traefik.enable=true"
       - "traefik.docker.network=${EASYPANEL_NETWORK:-easypanel-teste-loggin}"
+      - "traefik.http.routers.grafana-monitoring.rule=Host(`${GRAFANA_DOMAIN}`)"
+      - "traefik.http.routers.grafana-monitoring.entrypoints=websecure"
+      - "traefik.http.routers.grafana-monitoring.tls=true"
+      - "traefik.http.routers.grafana-monitoring.tls.certresolver=letsencrypt"
+      - "traefik.http.services.grafana-monitoring.loadbalancer.server.port=3000"
     expose:
       - "3000"   # acesso externo via reverse proxy do EasyPanel
     depends_on:

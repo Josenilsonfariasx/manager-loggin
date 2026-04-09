@@ -43,6 +43,7 @@ No painel do serviço, em **Environment**, adicione:
 ENVIRONMENT=production
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=sua_senha_segura
+GRAFANA_DOMAIN=teste-loggin-monitoring.7djjku.easypanel.host
 LOKI_RETENTION_PERIOD=744h
 EASYPANEL_NETWORK=easypanel-<nome-do-projeto>
 ```
@@ -57,11 +58,12 @@ EASYPANEL_NETWORK=easypanel-<nome-do-projeto>
 
 ### 1.3 Expor o Grafana
 
-1. No serviço `monitoring`, vá em **Domains**
-2. Adicione um domínio para a porta `3000`
-3. Ex: `grafana.seudominio.com`
+As labels Traefik já estão no `docker-compose.yml` — basta definir a variável `GRAFANA_DOMAIN` no EasyPanel:
 
-> Os outros serviços (otel-collector, loki, prometheus) **não precisam** de domínio externo — eles ficam apenas na rede interna.
+- Para domínio próprio: `grafana.seudominio.com`
+- Para subdomínio do EasyPanel: `<nome-do-projeto>-monitoring.<id>.easypanel.host`
+
+> Após definir `GRAFANA_DOMAIN` e fazer redeploy, o Traefik já roteará automaticamente — não precisa configurar nada na aba Domains do EasyPanel.
 
 ---
 
