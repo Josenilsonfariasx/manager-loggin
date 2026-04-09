@@ -86,4 +86,4 @@ networks:
     driver: bridge
   easypanel:
     external: true
-    name: ${EASYPANEL_NETWORK:-teste-loggin_default}
+    name: ${EASYPANEL_NETWORK:-easypanel-teste-loggin}
